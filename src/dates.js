@@ -45,13 +45,19 @@ export function nombreMes(clave) {
 }
 
 // ── Periodos ─────────────────────────────────────────────────────────────────
-// periodo: {tipo:'mes', mes} | {tipo:'3meses'} | {tipo:'anio'} | {tipo:'personalizado', desde, hasta}
+// periodo: {tipo:'semana', inicio (lunes)} | {tipo:'mes', mes} | {tipo:'anio'} | {tipo:'personalizado', desde, hasta}
 
 const aDia = (iso) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86400000;
 const deDia = (n) => new Date(n * 86400000).toISOString().slice(0, 10);
 const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 export const sumarDias = (fecha, n) => deDia(aDia(fecha) + n);
+
+// Las semanas van de lunes a domingo.
+export function lunesDe(fecha) {
+  const diaSemana = new Date(aDia(fecha) * 86400000).getUTCDay(); // 0 = domingo
+  return sumarDias(fecha, -((diaSemana + 6) % 7));
+}
 
 export function restarMeses(fecha, n) {
   let clave = claveMes(fecha);
@@ -63,7 +69,7 @@ export function restarMeses(fecha, n) {
 export function rangoPeriodo(periodo, hoy) {
   switch (periodo.tipo) {
     case 'mes': return rangoMes(periodo.mes);
-    case '3meses': return { desde: `${restarMeses(hoy, 2).slice(0, 7)}-01`, hasta: hoy };
+    case 'semana': return { desde: periodo.inicio, hasta: sumarDias(periodo.inicio, 6) };
     case 'anio': return { desde: `${hoy.slice(0, 4)}-01-01`, hasta: hoy };
     case 'personalizado': {
       const { desde, hasta } = periodo;
@@ -85,8 +91,13 @@ export function rangosComparacionPeriodo(periodo, hoy) {
     const n = aDia(hasta) - aDia(actual.desde) + 1;
     return { actual: { desde: actual.desde, hasta }, anterior: { desde: sumarDias(actual.desde, -n), hasta: sumarDias(actual.desde, -1) } };
   }
-  const meses = periodo.tipo === 'anio' ? 12 : 3;
-  return { actual, anterior: { desde: restarMeses(actual.desde, meses), hasta: restarMeses(actual.hasta, meses) } };
+  if (periodo.tipo === 'semana') {
+    // Semana en curso: lunes..hoy contra los mismos días de la semana anterior.
+    if (actual.desde > hoy) return { actual, anterior: null };
+    const hasta = actual.hasta > hoy ? hoy : actual.hasta;
+    return { actual: { desde: actual.desde, hasta }, anterior: { desde: sumarDias(actual.desde, -7), hasta: sumarDias(hasta, -7) } };
+  }
+  return { actual, anterior: { desde: restarMeses(actual.desde, 12), hasta: restarMeses(actual.hasta, 12) } };
 }
 
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -94,9 +105,10 @@ const fechaCorta = (iso) => `${Number(iso.slice(8, 10))} ${MESES_CORTOS[Number(i
 
 export function etiquetaPeriodo(periodo, hoy) {
   if (periodo.tipo === 'mes') return nombreMes(periodo.mes);
-  if (periodo.tipo === '3meses') return 'Últimos 3 meses';
   if (periodo.tipo === 'anio') return `Este año (${hoy.slice(0, 4)})`;
-  const { desde, hasta } = periodo;
+  const { desde, hasta } = rangoPeriodo(periodo, hoy);
   const mismoAnio = desde.slice(0, 4) === hasta.slice(0, 4);
-  return `${fechaCorta(desde)}${mismoAnio ? '' : ` ${desde.slice(0, 4)}`} – ${fechaCorta(hasta)} ${hasta.slice(0, 4)}`;
+  // En una semana dentro del mismo mes basta con el día: "23 – 29 nov 2026".
+  const inicio = periodo.tipo === 'semana' && desde.slice(0, 7) === hasta.slice(0, 7) ? String(Number(desde.slice(8, 10))) : fechaCorta(desde);
+  return `${inicio}${mismoAnio ? '' : ` ${desde.slice(0, 4)}`} – ${fechaCorta(hasta)} ${hasta.slice(0, 4)}`;
 }

@@ -122,7 +122,7 @@ test('ingresos por categoría en el periodo', () => {
     mov('ingreso', 500000, '2026-10-01', { categoriaId: 'sueldo' }),
     mov('ingreso', 500000, '2026-11-01', { categoriaId: 'sueldo' }),
   );
-  const r = resumenPeriodo(e, { tipo: '3meses' }, '2026-11-24');
+  const r = resumenPeriodo(e, { tipo: 'anio' }, '2026-11-24');
   assert.deepEqual(r.porCategoriaIngreso.map((c) => [c.categoriaId, c.total]), [['sueldo', 1000000]]);
   assert.equal(r.porCategoria.length, 0);
 });

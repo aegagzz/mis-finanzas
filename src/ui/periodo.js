@@ -1,8 +1,15 @@
-// Selector de periodo: Mes (‹ ›) · 3 meses · Año · Elegir (del ___ al ___).
+// Selector de periodo: Semana (‹ ›) · Mes (‹ ›) · Año · Elegir (del ___ al ___).
 import { h } from './dom.js';
-import { claveMes, mesAnterior, mesSiguiente, nombreMes, etiquetaPeriodo, rangoPeriodo } from '../dates.js';
+import { claveMes, mesAnterior, mesSiguiente, nombreMes, etiquetaPeriodo, rangoPeriodo, lunesDe, sumarDias } from '../dates.js';
 
-const OPCIONES = [['mes', 'Mes'], ['3meses', '3 meses'], ['anio', 'Año'], ['personalizado', 'Elegir']];
+const OPCIONES = [['semana', 'Semana'], ['mes', 'Mes'], ['anio', 'Año'], ['personalizado', 'Elegir']];
+
+function navegador(etiqueta, { anterior, siguiente, haySiguiente, nombre }) {
+  return h('div', { class: 'mes-cabecera' },
+    h('button', { class: 'btn-icono', 'aria-label': `${nombre} anterior`, onclick: anterior }, '‹'),
+    h('h1', {}, etiqueta),
+    h('button', { class: 'btn-icono', 'aria-label': `${nombre} siguiente`, disabled: !haySiguiente, onclick: siguiente }, '›'));
+}
 
 export function selectorPeriodo(ctx) {
   const hoy = ctx.hoy();
@@ -12,6 +19,7 @@ export function selectorPeriodo(ctx) {
   function elegir(tipo) {
     if (tipo === p.tipo) return;
     if (tipo === 'mes') ctx.cambiarPeriodo({ tipo: 'mes', mes: mesActual });
+    else if (tipo === 'semana') ctx.cambiarPeriodo({ tipo: 'semana', inicio: lunesDe(hoy) });
     else if (tipo === 'personalizado') {
       const r = rangoPeriodo(p, hoy); // empieza con el rango que ya estaba a la vista
       ctx.cambiarPeriodo({ tipo, desde: r.desde < hoy ? r.desde : hoy, hasta: r.hasta < hoy ? r.hasta : hoy });
@@ -24,11 +32,17 @@ export function selectorPeriodo(ctx) {
 
   let detalle;
   if (p.tipo === 'mes') {
-    detalle = h('div', { class: 'mes-cabecera' },
-      h('button', { class: 'btn-icono', 'aria-label': 'Mes anterior', onclick: () => ctx.cambiarPeriodo({ tipo: 'mes', mes: mesAnterior(p.mes) }) }, '‹'),
-      h('h1', {}, nombreMes(p.mes)),
-      h('button', { class: 'btn-icono', 'aria-label': 'Mes siguiente', disabled: p.mes >= mesActual,
-        onclick: () => ctx.cambiarPeriodo({ tipo: 'mes', mes: mesSiguiente(p.mes) }) }, '›'));
+    detalle = navegador(nombreMes(p.mes), {
+      nombre: 'Mes', haySiguiente: p.mes < mesActual,
+      anterior: () => ctx.cambiarPeriodo({ tipo: 'mes', mes: mesAnterior(p.mes) }),
+      siguiente: () => ctx.cambiarPeriodo({ tipo: 'mes', mes: mesSiguiente(p.mes) }),
+    });
+  } else if (p.tipo === 'semana') {
+    detalle = navegador(etiquetaPeriodo(p, hoy), {
+      nombre: 'Semana', haySiguiente: p.inicio < lunesDe(hoy),
+      anterior: () => ctx.cambiarPeriodo({ tipo: 'semana', inicio: sumarDias(p.inicio, -7) }),
+      siguiente: () => ctx.cambiarPeriodo({ tipo: 'semana', inicio: sumarDias(p.inicio, 7) }),
+    });
   } else if (p.tipo === 'personalizado') {
     const desde = h('input', { type: 'date', value: p.desde, max: hoy, 'aria-label': 'Desde' });
     const hasta = h('input', { type: 'date', value: p.hasta, max: hoy, 'aria-label': 'Hasta' });
