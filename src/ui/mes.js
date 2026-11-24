@@ -2,7 +2,6 @@
 import { h, limpiar } from './dom.js';
 import { formatPesos } from '../money.js';
 import { resumenPeriodo } from '../summary.js';
-import { necesitaRespaldo } from '../backup.js';
 import { abrirRegistro } from './registrar.js';
 import { abrirDetalle } from './detalle.js';
 import { selectorPeriodo } from './periodo.js';
@@ -33,11 +32,6 @@ export function montarMes(contenedor, store, ctx) {
 
   const danados = store.datosDanados
     ? h('a', { class: 'banner', href: '#ajustes' }, '⚠️ Tus datos guardados estaban dañados y no se pudieron abrir. Se guardó una copia aparte; toca aquí para restaurar tu último respaldo.')
-    : null;
-  const aviso = necesitaRespaldo(e.ajustes.ultimoRespaldo, hoy) && e.movimientos.length > 0
-    ? h('a', { class: 'banner', href: '#ajustes' }, e.ajustes.ultimoRespaldo
-        ? '💾 Hace más de un mes que no respaldas tus datos. Toca para hacer un respaldo.'
-        : '💾 Aún no has respaldado tus datos. Toca para hacer tu primer respaldo.')
     : null;
 
   const tarjetas = h('section', { class: 'resumen', 'aria-label': 'Resumen del periodo' },
@@ -90,5 +84,5 @@ export function montarMes(contenedor, store, ctx) {
 
   const fab = h('button', { class: 'fab', 'aria-label': 'Registrar gasto o ingreso', onclick: () => abrirRegistro(store) }, '+');
 
-  limpiar(contenedor, danados, aviso, selectorPeriodo(ctx), tarjetas, apartado, gastos, ingresos, lista, fab);
+  limpiar(contenedor, danados, selectorPeriodo(ctx), tarjetas, apartado, gastos, ingresos, lista, fab);
 }
