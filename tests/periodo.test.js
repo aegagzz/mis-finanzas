@@ -45,3 +45,13 @@ test('etiquetas', () => {
   assert.equal(etiquetaPeriodo({ tipo: 'anio' }, HOY), 'Este año (2026)');
   assert.equal(etiquetaPeriodo({ tipo: 'personalizado', desde: '2026-09-01', hasta: '2026-11-24' }, HOY), '1 sep – 24 nov 2026');
 });
+
+test('personalizado que termina en el futuro compara sólo hasta hoy', () => {
+  const r = rangosComparacionPeriodo({ tipo: 'personalizado', desde: '2026-11-01', hasta: '2026-11-30' }, HOY);
+  assert.deepEqual(r.actual, { desde: '2026-11-01', hasta: HOY }); // 24 días
+  assert.deepEqual(r.anterior, { desde: '2026-10-08', hasta: '2026-10-31' });
+});
+
+test('personalizado que empieza en el futuro no tiene comparación', () => {
+  assert.equal(rangosComparacionPeriodo({ tipo: 'personalizado', desde: '2026-12-01', hasta: '2026-12-31' }, HOY).anterior, null);
+});

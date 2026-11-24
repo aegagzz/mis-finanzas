@@ -155,3 +155,11 @@ test('detalle de categoría sin movimientos en el periodo', () => {
   assert.equal(d.cantidad, 0);
   assert.equal(d.cambio, null);
 });
+
+test('periodo futuro: sin porcentaje de cambio', () => {
+  const e = estadoBase();
+  e.movimientos.push(mov('gasto', 500, '2026-12-05', { categoriaId: 'comida' }));
+  const p = { tipo: 'personalizado', desde: '2026-12-01', hasta: '2026-12-31' };
+  assert.equal(resumenPeriodo(e, p, '2026-11-24').porCategoria[0].cambio, null);
+  assert.equal(detalleCategoria(e, p, '2026-11-24', 'comida').cambio, null);
+});

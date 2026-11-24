@@ -1,7 +1,7 @@
 // Resumen de un periodo: totales, "Queda", categorías de gasto e ingreso y detalle por categoría.
 import { rangoPeriodo, rangosComparacionPeriodo } from './dates.js';
 
-const enRango = (f, r) => f >= r.desde && f <= r.hasta;
+const enRango = (f, r) => Boolean(r) && f >= r.desde && f <= r.hasta;
 const suma = (lista) => lista.reduce((t, m) => t + m.monto, 0);
 const recientePrimero = (a, b) => (b.fecha + b.creadoEn).localeCompare(a.fecha + a.creadoEn);
 const cambioPct = (comparable, anterior) => (anterior ? (comparable - anterior) / anterior : null);

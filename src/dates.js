@@ -79,8 +79,11 @@ export function rangosComparacionPeriodo(periodo, hoy) {
   if (periodo.tipo === 'mes') return rangoComparacion(periodo.mes, hoy);
   const actual = rangoPeriodo(periodo, hoy);
   if (periodo.tipo === 'personalizado') {
-    const n = aDia(actual.hasta) - aDia(actual.desde) + 1;
-    return { actual, anterior: { desde: sumarDias(actual.desde, -n), hasta: sumarDias(actual.desde, -1) } };
+    // Sólo se comparan días que ya pasaron; si todo el rango es futuro, no hay comparación.
+    if (actual.desde > hoy) return { actual, anterior: null };
+    const hasta = actual.hasta > hoy ? hoy : actual.hasta;
+    const n = aDia(hasta) - aDia(actual.desde) + 1;
+    return { actual: { desde: actual.desde, hasta }, anterior: { desde: sumarDias(actual.desde, -n), hasta: sumarDias(actual.desde, -1) } };
   }
   const meses = periodo.tipo === 'anio' ? 12 : 3;
   return { actual, anterior: { desde: restarMeses(actual.desde, meses), hasta: restarMeses(actual.hasta, meses) } };

@@ -14,7 +14,7 @@ export function selectorPeriodo(ctx) {
     if (tipo === 'mes') ctx.cambiarPeriodo({ tipo: 'mes', mes: mesActual });
     else if (tipo === 'personalizado') {
       const r = rangoPeriodo(p, hoy); // empieza con el rango que ya estaba a la vista
-      ctx.cambiarPeriodo({ tipo, desde: r.desde, hasta: r.hasta });
+      ctx.cambiarPeriodo({ tipo, desde: r.desde < hoy ? r.desde : hoy, hasta: r.hasta < hoy ? r.hasta : hoy });
     } else ctx.cambiarPeriodo({ tipo });
   }
 
@@ -31,7 +31,7 @@ export function selectorPeriodo(ctx) {
         onclick: () => ctx.cambiarPeriodo({ tipo: 'mes', mes: mesSiguiente(p.mes) }) }, '›'));
   } else if (p.tipo === 'personalizado') {
     const desde = h('input', { type: 'date', value: p.desde, max: hoy, 'aria-label': 'Desde' });
-    const hasta = h('input', { type: 'date', value: p.hasta, 'aria-label': 'Hasta' });
+    const hasta = h('input', { type: 'date', value: p.hasta, max: hoy, 'aria-label': 'Hasta' });
     const error = h('p', { class: 'error', role: 'alert' });
     detalle = h('form', { class: 'periodo-rango', onsubmit: (ev) => {
       ev.preventDefault();
