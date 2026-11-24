@@ -100,3 +100,58 @@ test('porCategoria ordenado por total descendente', () => {
   );
   assert.deepEqual(resumenMes(e, '2026-11', '2026-11-24').porCategoria.map((c) => c.categoriaId), ['ocio', 'comida']);
 });
+
+// ── Periodos y detalle ───────────────────────────────────────────────────────
+import { resumenPeriodo, detalleCategoria } from '../src/summary.js';
+
+test('resumen del año suma movimientos de varios meses', () => {
+  const e = estadoBase();
+  e.movimientos.push(
+    mov('gasto', 1000, '2026-02-10', { categoriaId: 'comida' }),
+    mov('gasto', 2000, '2026-11-10', { categoriaId: 'comida' }),
+    mov('gasto', 9999, '2025-12-31', { categoriaId: 'comida' }),
+  );
+  const r = resumenPeriodo(e, { tipo: 'anio' }, '2026-11-24');
+  assert.equal(r.gastos, 3000);
+  assert.deepEqual(r.rango, { desde: '2026-01-01', hasta: '2026-11-24' });
+});
+
+test('ingresos por categoría en el periodo', () => {
+  const e = estadoBase();
+  e.movimientos.push(
+    mov('ingreso', 500000, '2026-10-01', { categoriaId: 'sueldo' }),
+    mov('ingreso', 500000, '2026-11-01', { categoriaId: 'sueldo' }),
+  );
+  const r = resumenPeriodo(e, { tipo: '3meses' }, '2026-11-24');
+  assert.deepEqual(r.porCategoriaIngreso.map((c) => [c.categoriaId, c.total]), [['sueldo', 1000000]]);
+  assert.equal(r.porCategoria.length, 0);
+});
+
+test('categoría con gastos sólo en el periodo anterior no aparece', () => {
+  const e = estadoBase();
+  e.movimientos.push(mov('gasto', 700, '2026-10-05', { categoriaId: 'comida' }));
+  assert.equal(resumenPeriodo(e, { tipo: 'mes', mes: '2026-11' }, '2026-11-24').porCategoria.length, 0);
+});
+
+test('detalle de una categoría: sólo sus movimientos del periodo, más reciente primero', () => {
+  const e = estadoBase();
+  e.movimientos.push(
+    mov('gasto', 100, '2026-11-02', { categoriaId: 'comida' }),
+    mov('gasto', 300, '2026-11-20', { categoriaId: 'comida', metaId: 'visa' }),
+    mov('gasto', 999, '2026-11-21', { categoriaId: 'ocio' }),
+    mov('gasto', 200, '2026-10-05', { categoriaId: 'comida' }),
+  );
+  const d = detalleCategoria(e, { tipo: 'mes', mes: '2026-11' }, '2026-11-24', 'comida');
+  assert.equal(d.tipo, 'gasto');
+  assert.equal(d.total, 400);
+  assert.equal(d.cantidad, 2);
+  assert.equal(d.cambio, 1); // 400 vs 200
+  assert.deepEqual(d.movimientos.map((m) => m.monto), [300, 100]);
+});
+
+test('detalle de categoría sin movimientos en el periodo', () => {
+  const d = detalleCategoria(estadoBase(), { tipo: 'anio' }, '2026-11-24', 'comida');
+  assert.equal(d.total, 0);
+  assert.equal(d.cantidad, 0);
+  assert.equal(d.cambio, null);
+});
