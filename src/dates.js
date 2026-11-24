@@ -43,3 +43,57 @@ export function nombreMes(clave) {
   const [a, m] = clave.split('-').map(Number);
   return `${MESES[m - 1]} ${a}`;
 }
+
+// ── Periodos ─────────────────────────────────────────────────────────────────
+// periodo: {tipo:'mes', mes} | {tipo:'3meses'} | {tipo:'anio'} | {tipo:'personalizado', desde, hasta}
+
+const aDia = (iso) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86400000;
+const deDia = (n) => new Date(n * 86400000).toISOString().slice(0, 10);
+const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+export const sumarDias = (fecha, n) => deDia(aDia(fecha) + n);
+
+export function restarMeses(fecha, n) {
+  let clave = claveMes(fecha);
+  for (let i = 0; i < n; i++) clave = mesAnterior(clave);
+  const dia = Math.min(Number(fecha.slice(8, 10)), diasDelMes(clave));
+  return `${clave}-${p2(dia)}`;
+}
+
+export function rangoPeriodo(periodo, hoy) {
+  switch (periodo.tipo) {
+    case 'mes': return rangoMes(periodo.mes);
+    case '3meses': return { desde: `${restarMeses(hoy, 2).slice(0, 7)}-01`, hasta: hoy };
+    case 'anio': return { desde: `${hoy.slice(0, 4)}-01-01`, hasta: hoy };
+    case 'personalizado': {
+      const { desde, hasta } = periodo;
+      if (!FECHA_ISO.test(desde || '') || !FECHA_ISO.test(hasta || '')) throw new Error('Elige las dos fechas');
+      if (desde > hasta) throw new Error('La fecha inicial debe ser anterior a la final');
+      return { desde, hasta };
+    }
+    default: throw new Error('Periodo inválido');
+  }
+}
+
+export function rangosComparacionPeriodo(periodo, hoy) {
+  if (periodo.tipo === 'mes') return rangoComparacion(periodo.mes, hoy);
+  const actual = rangoPeriodo(periodo, hoy);
+  if (periodo.tipo === 'personalizado') {
+    const n = aDia(actual.hasta) - aDia(actual.desde) + 1;
+    return { actual, anterior: { desde: sumarDias(actual.desde, -n), hasta: sumarDias(actual.desde, -1) } };
+  }
+  const meses = periodo.tipo === 'anio' ? 12 : 3;
+  return { actual, anterior: { desde: restarMeses(actual.desde, meses), hasta: restarMeses(actual.hasta, meses) } };
+}
+
+const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const fechaCorta = (iso) => `${Number(iso.slice(8, 10))} ${MESES_CORTOS[Number(iso.slice(5, 7)) - 1]}`;
+
+export function etiquetaPeriodo(periodo, hoy) {
+  if (periodo.tipo === 'mes') return nombreMes(periodo.mes);
+  if (periodo.tipo === '3meses') return 'Últimos 3 meses';
+  if (periodo.tipo === 'anio') return `Este año (${hoy.slice(0, 4)})`;
+  const { desde, hasta } = periodo;
+  const mismoAnio = desde.slice(0, 4) === hasta.slice(0, 4);
+  return `${fechaCorta(desde)}${mismoAnio ? '' : ` ${desde.slice(0, 4)}`} – ${fechaCorta(hasta)} ${hasta.slice(0, 4)}`;
+}
