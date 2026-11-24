@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sumarDias, restarMeses, rangoPeriodo, rangosComparacionPeriodo, rangoComparacion, etiquetaPeriodo, lunesDe } from '../src/dates.js';
+import { sumarDias, restarMeses, rangoPeriodo, rangosComparacionPeriodo, rangoComparacion, etiquetaPeriodo, inicioSemana } from '../src/dates.js';
 
 const HOY = '2026-11-24';
 
@@ -10,35 +10,35 @@ test('sumarDias cruza meses', () => {
 });
 test('restarMeses limita el día', () => assert.equal(restarMeses('2026-05-31', 3), '2026-02-28'));
 
-// 2026-11-24 es martes → su semana es lunes 23 a domingo 29.
-test('lunesDe da el lunes de la semana', () => {
-  assert.equal(lunesDe('2026-11-24'), '2026-11-23');
-  assert.equal(lunesDe('2026-11-23'), '2026-11-23');
-  assert.equal(lunesDe('2026-11-29'), '2026-11-23'); // domingo
-  assert.equal(lunesDe('2027-01-01'), '2026-12-28'); // cruza año
+// 2026-11-24 es martes → su semana es domingo 22 a sábado 28.
+test('inicioSemana da el domingo de la semana', () => {
+  assert.equal(inicioSemana('2026-11-24'), '2026-11-22');
+  assert.equal(inicioSemana('2026-11-22'), '2026-11-22'); // domingo
+  assert.equal(inicioSemana('2026-11-28'), '2026-11-22'); // sábado
+  assert.equal(inicioSemana('2027-01-01'), '2026-12-27'); // cruza año
 });
-test('rango de una semana: lunes a domingo', () => {
-  assert.deepEqual(rangoPeriodo({ tipo: 'semana', inicio: '2026-11-23' }, HOY), { desde: '2026-11-23', hasta: '2026-11-29' });
+test('rango de una semana: domingo a sábado', () => {
+  assert.deepEqual(rangoPeriodo({ tipo: 'semana', inicio: '2026-11-22' }, HOY), { desde: '2026-11-22', hasta: '2026-11-28' });
 });
 test('semana actual compara los mismos días de la semana anterior', () => {
-  assert.deepEqual(rangosComparacionPeriodo({ tipo: 'semana', inicio: '2026-11-23' }, HOY), {
-    actual: { desde: '2026-11-23', hasta: '2026-11-24' },
-    anterior: { desde: '2026-11-16', hasta: '2026-11-17' },
+  assert.deepEqual(rangosComparacionPeriodo({ tipo: 'semana', inicio: '2026-11-22' }, HOY), {
+    actual: { desde: '2026-11-22', hasta: '2026-11-24' },
+    anterior: { desde: '2026-11-15', hasta: '2026-11-17' },
   });
 });
 test('semana pasada compara completa contra la anterior', () => {
-  assert.deepEqual(rangosComparacionPeriodo({ tipo: 'semana', inicio: '2026-11-02' }, HOY), {
-    actual: { desde: '2026-11-02', hasta: '2026-11-08' },
-    anterior: { desde: '2026-10-26', hasta: '2026-11-01' },
+  assert.deepEqual(rangosComparacionPeriodo({ tipo: 'semana', inicio: '2026-11-01' }, HOY), {
+    actual: { desde: '2026-11-01', hasta: '2026-11-07' },
+    anterior: { desde: '2026-10-25', hasta: '2026-10-31' },
   });
 });
 test('semana futura no tiene comparación', () => {
-  assert.equal(rangosComparacionPeriodo({ tipo: 'semana', inicio: '2026-11-30' }, HOY).anterior, null);
+  assert.equal(rangosComparacionPeriodo({ tipo: 'semana', inicio: '2026-11-29' }, HOY).anterior, null);
 });
 test('etiqueta de semana, también cruzando año', () => {
-  assert.equal(etiquetaPeriodo({ tipo: 'semana', inicio: '2026-11-23' }, HOY), '23 – 29 nov 2026');
-  assert.equal(etiquetaPeriodo({ tipo: 'semana', inicio: '2026-11-30' }, HOY), '30 nov – 6 dic 2026');
-  assert.equal(etiquetaPeriodo({ tipo: 'semana', inicio: '2026-12-28' }, HOY), '28 dic 2026 – 3 ene 2027');
+  assert.equal(etiquetaPeriodo({ tipo: 'semana', inicio: '2026-11-22' }, HOY), '22 – 28 nov 2026');
+  assert.equal(etiquetaPeriodo({ tipo: 'semana', inicio: '2026-11-29' }, HOY), '29 nov – 5 dic 2026');
+  assert.equal(etiquetaPeriodo({ tipo: 'semana', inicio: '2026-12-27' }, HOY), '27 dic 2026 – 2 ene 2027');
 });
 test('ya no existe el periodo de 3 meses', () => assert.throws(() => rangoPeriodo({ tipo: '3meses' }, HOY), /Periodo inválido/));
 test('rango de este año', () => assert.deepEqual(rangoPeriodo({ tipo: 'anio' }, HOY), { desde: '2026-01-01', hasta: HOY }));

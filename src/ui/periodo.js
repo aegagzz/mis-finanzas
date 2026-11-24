@@ -1,6 +1,6 @@
 // Selector de periodo: Semana (‹ ›) · Mes (‹ ›) · Año · Elegir (del ___ al ___).
 import { h } from './dom.js';
-import { claveMes, mesAnterior, mesSiguiente, nombreMes, etiquetaPeriodo, rangoPeriodo, lunesDe, sumarDias } from '../dates.js';
+import { claveMes, mesAnterior, mesSiguiente, nombreMes, etiquetaPeriodo, rangoPeriodo, inicioSemana, sumarDias } from '../dates.js';
 
 const OPCIONES = [['semana', 'Semana'], ['mes', 'Mes'], ['anio', 'Año'], ['personalizado', 'Elegir']];
 
@@ -19,7 +19,7 @@ export function selectorPeriodo(ctx) {
   function elegir(tipo) {
     if (tipo === p.tipo) return;
     if (tipo === 'mes') ctx.cambiarPeriodo({ tipo: 'mes', mes: mesActual });
-    else if (tipo === 'semana') ctx.cambiarPeriodo({ tipo: 'semana', inicio: lunesDe(hoy) });
+    else if (tipo === 'semana') ctx.cambiarPeriodo({ tipo: 'semana', inicio: inicioSemana(hoy) });
     else if (tipo === 'personalizado') {
       const r = rangoPeriodo(p, hoy); // empieza con el rango que ya estaba a la vista
       ctx.cambiarPeriodo({ tipo, desde: r.desde < hoy ? r.desde : hoy, hasta: r.hasta < hoy ? r.hasta : hoy });
@@ -39,7 +39,7 @@ export function selectorPeriodo(ctx) {
     });
   } else if (p.tipo === 'semana') {
     detalle = navegador(etiquetaPeriodo(p, hoy), {
-      nombre: 'Semana', haySiguiente: p.inicio < lunesDe(hoy),
+      nombre: 'Semana', haySiguiente: p.inicio < inicioSemana(hoy),
       anterior: () => ctx.cambiarPeriodo({ tipo: 'semana', inicio: sumarDias(p.inicio, -7) }),
       siguiente: () => ctx.cambiarPeriodo({ tipo: 'semana', inicio: sumarDias(p.inicio, 7) }),
     });

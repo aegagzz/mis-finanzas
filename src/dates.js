@@ -45,7 +45,7 @@ export function nombreMes(clave) {
 }
 
 // ── Periodos ─────────────────────────────────────────────────────────────────
-// periodo: {tipo:'semana', inicio (lunes)} | {tipo:'mes', mes} | {tipo:'anio'} | {tipo:'personalizado', desde, hasta}
+// periodo: {tipo:'semana', inicio (domingo)} | {tipo:'mes', mes} | {tipo:'anio'} | {tipo:'personalizado', desde, hasta}
 
 const aDia = (iso) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86400000;
 const deDia = (n) => new Date(n * 86400000).toISOString().slice(0, 10);
@@ -53,10 +53,10 @@ const FECHA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 export const sumarDias = (fecha, n) => deDia(aDia(fecha) + n);
 
-// Las semanas van de lunes a domingo.
-export function lunesDe(fecha) {
+// Las semanas van de domingo a sábado.
+export function inicioSemana(fecha) {
   const diaSemana = new Date(aDia(fecha) * 86400000).getUTCDay(); // 0 = domingo
-  return sumarDias(fecha, -((diaSemana + 6) % 7));
+  return sumarDias(fecha, -diaSemana);
 }
 
 export function restarMeses(fecha, n) {
@@ -92,7 +92,7 @@ export function rangosComparacionPeriodo(periodo, hoy) {
     return { actual: { desde: actual.desde, hasta }, anterior: { desde: sumarDias(actual.desde, -n), hasta: sumarDias(actual.desde, -1) } };
   }
   if (periodo.tipo === 'semana') {
-    // Semana en curso: lunes..hoy contra los mismos días de la semana anterior.
+    // Semana en curso: domingo..hoy contra los mismos días de la semana anterior.
     if (actual.desde > hoy) return { actual, anterior: null };
     const hasta = actual.hasta > hoy ? hoy : actual.hasta;
     return { actual: { desde: actual.desde, hasta }, anterior: { desde: sumarDias(actual.desde, -7), hasta: sumarDias(hasta, -7) } };
