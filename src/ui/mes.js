@@ -1,30 +1,35 @@
-// Pantalla principal: el mes de un vistazo.
+// Pantalla principal: el periodo elegido de un vistazo (por defecto, el mes actual).
 import { h, limpiar } from './dom.js';
 import { formatPesos } from '../money.js';
-import { nombreMes, mesAnterior, mesSiguiente, claveMes } from '../dates.js';
-import { resumenMes } from '../summary.js';
+import { resumenPeriodo } from '../summary.js';
 import { necesitaRespaldo } from '../backup.js';
 import { abrirRegistro } from './registrar.js';
+import { abrirDetalle } from './detalle.js';
+import { selectorPeriodo } from './periodo.js';
+import { textoCambio, fechaCorta } from './formato.js';
 
-const fechaCorta = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
-
-function textoCambio(cambio) {
-  if (cambio == null) return null;
-  const pct = Math.round(cambio * 100);
-  if (pct === 0) return h('span', { class: 'cambio igual' }, '= vs mes ant.');
-  return h('span', { class: `cambio ${pct > 0 ? 'sube' : 'baja'}`, title: 'Comparado con los mismos días del mes anterior' },
-    `${pct > 0 ? '▲ +' : '▼ '}${pct}%`);
+function seccionCategorias(store, ctx, { titulo, vacio, lista, tipo, cat }) {
+  const maximo = Math.max(1, ...lista.map((c) => c.total));
+  return h('section', { class: `categorias ${tipo}`, 'aria-label': titulo },
+    h('h2', {}, titulo),
+    lista.length === 0
+      ? h('p', { class: 'vacio' }, vacio)
+      : h('ul', { class: 'barras' }, lista.map((c) => {
+          const info = cat.get(c.categoriaId) || { emoji: '❔', nombre: 'Sin categoría' };
+          return h('li', {}, h('button', { class: 'barra-boton', 'aria-label': `Ver detalle de ${info.nombre}`, onclick: () => abrirDetalle(store, ctx, c.categoriaId) },
+            h('div', { class: 'barra-texto' },
+              h('span', {}, `${info.emoji} ${info.nombre}`),
+              h('span', { class: 'barra-monto' }, formatPesos(c.total), ' ', textoCambio(c.cambio, tipo), h('span', { class: 'chevron', 'aria-hidden': 'true' }, ' ›'))),
+            h('div', { class: 'barra', role: 'presentation' }, h('div', { class: 'barra-relleno', style: { width: `${(c.total / maximo) * 100}%` } }))));
+        })));
 }
 
 export function montarMes(contenedor, store, ctx) {
   const e = store.obtener();
   const hoy = ctx.hoy();
-  const clave = ctx.mes;
-  const r = resumenMes(e, clave, hoy);
+  const r = resumenPeriodo(e, ctx.periodo, hoy);
   const cat = new Map(e.categorias.map((c) => [c.id, c]));
   const meta = new Map(e.metas.map((m) => [m.id, m]));
-  const maximo = Math.max(1, ...r.porCategoria.map((c) => c.total));
-  const esMesActual = clave === claveMes(hoy);
 
   const danados = store.datosDanados
     ? h('a', { class: 'banner', href: '#ajustes' }, '⚠️ Tus datos guardados estaban dañados y no se pudieron abrir. Se guardó una copia aparte; toca aquí para restaurar tu último respaldo.')
@@ -35,12 +40,7 @@ export function montarMes(contenedor, store, ctx) {
         : '💾 Aún no has respaldado tus datos. Toca para hacer tu primer respaldo.')
     : null;
 
-  const cabecera = h('header', { class: 'mes-cabecera' },
-    h('button', { class: 'btn-icono', 'aria-label': 'Mes anterior', onclick: () => ctx.irAMes(mesAnterior(clave)) }, '‹'),
-    h('h1', {}, nombreMes(clave)),
-    h('button', { class: 'btn-icono', 'aria-label': 'Mes siguiente', disabled: esMesActual, onclick: () => ctx.irAMes(mesSiguiente(clave)) }, '›'));
-
-  const tarjetas = h('section', { class: 'resumen', 'aria-label': 'Resumen del mes' },
+  const tarjetas = h('section', { class: 'resumen', 'aria-label': 'Resumen del periodo' },
     h('div', { class: 'tarjeta ingreso' }, h('span', {}, 'Ingresos'), h('strong', {}, formatPesos(r.ingresos))),
     h('div', { class: 'tarjeta gasto' }, h('span', {}, 'Gastos'), h('strong', {}, formatPesos(r.gastos)),
       r.gastosTarjeta > 0 && h('small', {}, `${formatPesos(r.gastosTarjeta)} con tarjeta`)),
@@ -61,23 +61,13 @@ export function montarMes(contenedor, store, ctx) {
           h('div', {}, h('span', {}, '💳 Pagos de deuda'), h('strong', {}, formatPesos(r.pagosDeuda)))))
     : null;
 
-  const categorias = h('section', { class: 'categorias', 'aria-label': 'Gastos por categoría' },
-    h('h2', {}, '¿En qué se fue?'),
-    r.porCategoria.length === 0
-      ? h('p', { class: 'vacio' }, 'Todavía no hay gastos este mes.')
-      : h('ul', { class: 'barras' }, r.porCategoria.map((c) => {
-          const info = cat.get(c.categoriaId) || { emoji: '❔', nombre: 'Sin categoría' };
-          return h('li', {},
-            h('div', { class: 'barra-texto' },
-              h('span', {}, `${info.emoji} ${info.nombre}`),
-              h('span', { class: 'barra-monto' }, formatPesos(c.total), ' ', textoCambio(c.cambio))),
-            h('div', { class: 'barra', role: 'presentation' }, h('div', { class: 'barra-relleno', style: { width: `${(c.total / maximo) * 100}%` } })));
-        })));
+  const gastos = seccionCategorias(store, ctx, { titulo: '¿En qué se fue?', vacio: 'No hay gastos en este periodo.', lista: r.porCategoria, tipo: 'gasto', cat });
+  const ingresos = seccionCategorias(store, ctx, { titulo: '¿De dónde vino?', vacio: 'No hay ingresos en este periodo.', lista: r.porCategoriaIngreso, tipo: 'ingreso', cat });
 
   const lista = h('section', { class: 'movimientos', 'aria-label': 'Movimientos' },
     h('h2', {}, 'Movimientos'),
     r.movimientos.length === 0
-      ? h('p', { class: 'vacio' }, 'Toca + para registrar tu primer gasto o ingreso.')
+      ? h('p', { class: 'vacio' }, 'Toca + para registrar un gasto o ingreso.')
       : h('ul', { class: 'lista' }, r.movimientos.map((m) => {
           const c = cat.get(m.categoriaId);
           const mt = meta.get(m.metaId);
@@ -100,5 +90,5 @@ export function montarMes(contenedor, store, ctx) {
 
   const fab = h('button', { class: 'fab', 'aria-label': 'Registrar gasto o ingreso', onclick: () => abrirRegistro(store) }, '+');
 
-  limpiar(contenedor, danados, aviso, cabecera, tarjetas, apartado, categorias, lista, fab);
+  limpiar(contenedor, danados, aviso, selectorPeriodo(ctx), tarjetas, apartado, gastos, ingresos, lista, fab);
 }

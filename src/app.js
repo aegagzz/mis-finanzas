@@ -22,8 +22,8 @@ function iniciar() {
   const vistas = { '#mes': montarMes, '#metas': montarMetas, '#ajustes': montarAjustes };
   const ctx = {
     hoy: () => hoyISO(),
-    mes: claveMes(hoyISO()),
-    irAMes(clave) { ctx.mes = clave; pintar(); },
+    periodo: { tipo: 'mes', mes: claveMes(hoyISO()) }, // vuelve a "Mes" cada vez que se abre la app
+    cambiarPeriodo(p) { ctx.periodo = p; pintar(); },
     instalacion: () => seccionInstalar(),
   };
 

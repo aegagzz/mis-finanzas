@@ -173,3 +173,24 @@ input[type="text"], input[type="date"], input[type="number"], select, .campo-tex
 .texto-ayuda { color: var(--suave); font-size: .88rem; margin: .3rem 0 .8rem; }
 .botonera { display: flex; flex-wrap: wrap; gap: .6rem; }
 .seccion-peligro h2 { color: var(--gasto); }
+
+/* Selector de periodo y detalle por categoría */
+.periodo { display: grid; gap: .6rem; }
+.periodo-tipos button { padding: .45rem .2rem; font-size: .9rem; }
+.periodo-titulo { font-size: 1.2rem; }
+.periodo-titulo::first-letter { text-transform: uppercase; }
+.periodo-titulo-bloque { display: grid; justify-items: center; gap: .1rem; }
+.periodo-rango { display: grid; grid-template-columns: 1fr 1fr auto; gap: .5rem; align-items: end; }
+.periodo-rango label { display: grid; gap: .2rem; font-size: .85rem; color: var(--suave); }
+.periodo-rango .error { grid-column: 1 / -1; min-height: 0; }
+.periodo-rango .periodo-titulo { grid-column: 1 / -1; text-align: center; text-transform: none; }
+.barra-boton { width: 100%; border: 0; background: none; padding: .25rem 0; text-align: left; border-radius: 10px; }
+.barra-boton:hover .barra-texto span:first-child, .barra-boton:focus-visible .barra-texto span:first-child { text-decoration: underline; }
+.chevron { color: var(--suave); }
+.categorias.ingreso .barra-relleno { background: var(--ingreso); }
+.categorias.ingreso .barra { background: color-mix(in srgb, var(--ingreso) 18%, transparent); }
+dialog.detalle .detalle-cuerpo { display: grid; gap: .6rem; padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); max-height: 92dvh; overflow-y: auto; }
+.detalle-periodo { margin: -.4rem 0 0; }
+.detalle-periodo::first-letter { text-transform: uppercase; }
+.detalle-total { display: grid; gap: .1rem; }
+.detalle-total strong { font-size: 1.8rem; }
