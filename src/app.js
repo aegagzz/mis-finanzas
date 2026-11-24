@@ -1,5 +1,7 @@
 import { crearStore } from './store.js';
-import { hoyISO, claveMes } from './dates.js';
+import { hoyISO, claveMes, inicioSemana } from './dates.js';
+import { accionDeInicio } from './inicio.js';
+import { abrirRegistro } from './ui/registrar.js';
 import { h, limpiar } from './ui/dom.js';
 import { barraNav, rutaActual } from './ui/nav.js';
 import { montarMes } from './ui/mes.js';
@@ -69,7 +71,12 @@ function iniciar() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { store.recargar(); pintar(); } });
   // Otra copia abierta (app instalada / pestaña) guardó cambios.
   window.addEventListener('storage', (ev) => { if (ev.key === null || ev.key === 'finanzas:v1') store.recargar(); });
+  // Acceso directo del ícono: abre el registro o la semana y limpia la URL.
+  const accion = accionDeInicio(location.search);
+  if (accion) history.replaceState(null, '', location.pathname + '#mes');
+  if (accion === 'semana') ctx.periodo = { tipo: 'semana', inicio: inicioSemana(hoyISO()) };
   pintar();
+  if (accion === 'gasto' || accion === 'ingreso') abrirRegistro(store, { tipo: accion });
   return { store, ctx, vistas, pintar };
 }
 

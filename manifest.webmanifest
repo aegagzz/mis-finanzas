@@ -14,5 +14,13 @@
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    { "name": "Registrar gasto", "short_name": "Gasto", "description": "Abre el registro de un gasto", "url": "./?accion=gasto",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Registrar ingreso", "short_name": "Ingreso", "description": "Abre el registro de un ingreso", "url": "./?accion=ingreso",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Ver semana", "short_name": "Semana", "description": "Muestra tus gastos de esta semana", "url": "./?accion=semana",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }
