@@ -194,3 +194,23 @@ dialog.detalle .detalle-cuerpo { display: grid; gap: .6rem; padding: 1rem 1rem c
 .detalle-periodo::first-letter { text-transform: uppercase; }
 .detalle-total { display: grid; gap: .1rem; }
 .detalle-total strong { font-size: 1.8rem; }
+
+/* Estado de resultados */
+button.tarjeta.queda { border: 0; text-align: left; font: inherit; cursor: pointer; width: 100%; }
+.er-titulo { font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); margin: .6rem 0 0; }
+.er-lista { list-style: none; margin: 0; padding: 0; }
+.er-fila { display: grid; grid-template-columns: 1fr auto 3.2rem; gap: .5rem; align-items: baseline; padding: .45rem 0; font-variant-numeric: tabular-nums; }
+.er-lista > li + li { border-top: 1px solid var(--borde); }
+.er-boton { width: 100%; border: 0; background: none; text-align: left; font: inherit; color: inherit; }
+.er-boton .er-texto::after { content: ' ›'; color: var(--suave); }
+.er-monto { text-align: right; white-space: nowrap; }
+.er-pct { text-align: right; color: var(--suave); font-size: .85rem; }
+.er-vacio { display: block; color: var(--suave); }
+.er-total { font-weight: 700; }
+.er-total.ingreso .er-monto { color: var(--ingreso); }
+.er-total.gasto .er-monto { color: var(--gasto); }
+.er-resultado { margin-top: .6rem; background: var(--fondo); border-radius: 12px; padding: 0 .7rem; }
+.er-total.positivo .er-monto { color: var(--ingreso); }
+.er-total.negativo .er-monto { color: var(--gasto); }
+.er-conciliacion .er-fila { grid-template-columns: 1fr auto; }
+.er-conciliacion .er-pct { display: none; }

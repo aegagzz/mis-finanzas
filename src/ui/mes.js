@@ -4,6 +4,7 @@ import { formatPesos } from '../money.js';
 import { resumenPeriodo } from '../summary.js';
 import { abrirRegistro } from './registrar.js';
 import { abrirDetalle } from './detalle.js';
+import { abrirEstado } from './estado.js';
 import { selectorPeriodo } from './periodo.js';
 import { textoCambio, fechaCorta } from './formato.js';
 
@@ -38,14 +39,8 @@ export function montarMes(contenedor, store, ctx) {
     h('div', { class: 'tarjeta ingreso' }, h('span', {}, 'Ingresos'), h('strong', {}, formatPesos(r.ingresos))),
     h('div', { class: 'tarjeta gasto' }, h('span', {}, 'Gastos'), h('strong', {}, formatPesos(r.gastos)),
       r.gastosTarjeta > 0 && h('small', {}, `${formatPesos(r.gastosTarjeta)} con tarjeta`)),
-    h('details', { class: `tarjeta queda ${r.queda < 0 ? 'negativo' : ''}` },
-      h('summary', {}, h('span', {}, 'Te queda'), h('strong', {}, formatPesos(r.queda)), h('small', {}, 'Toca para ver el cálculo')),
-      h('dl', { class: 'desglose' },
-        h('dt', {}, 'Ingresos'), h('dd', {}, formatPesos(r.ingresos)),
-        h('dt', {}, '− Gastos en efectivo / débito'), h('dd', {}, formatPesos(r.gastosEfectivo)),
-        h('dt', {}, '− Ahorro'), h('dd', {}, formatPesos(r.ahorro)),
-        h('dt', {}, '− Pagos de deuda / tarjeta'), h('dd', {}, formatPesos(r.pagosDeuda)),
-        h('dt', { class: 'nota-desglose' }, 'Las compras con tarjeta se descuentan cuando pagas la tarjeta.'))));
+    h('button', { type: 'button', class: `tarjeta queda ${r.queda < 0 ? 'negativo' : ''}`, onclick: () => abrirEstado(store, ctx) },
+      h('span', {}, 'Te queda'), h('strong', {}, formatPesos(r.queda)), h('small', {}, 'Toca para ver el estado de resultados ›')));
 
   const apartado = (r.ahorro !== 0 || r.pagosDeuda !== 0)
     ? h('section', { class: 'apartado', 'aria-label': 'Ahorro y pagos de deuda' },

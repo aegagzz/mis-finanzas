@@ -163,3 +163,58 @@ test('periodo futuro: sin porcentaje de cambio', () => {
   assert.equal(resumenPeriodo(e, p, '2026-11-24').porCategoria[0].cambio, null);
   assert.equal(detalleCategoria(e, p, '2026-11-24', 'comida').cambio, null);
 });
+
+// ── Estado de resultados ─────────────────────────────────────────────────────
+import { estadoResultados } from '../src/summary.js';
+
+const NOV = { tipo: 'mes', mes: '2026-11' };
+
+test('estado de resultados: ingresos, gastos, resultado y conciliación', () => {
+  const e = estadoBase();
+  e.movimientos.push(
+    mov('ingreso', 2000000, '2026-11-01', { categoriaId: 'sueldo' }),
+    mov('gasto', 300000, '2026-11-02', { categoriaId: 'comida' }),
+    mov('gasto', 150000, '2026-11-03', { categoriaId: 'comida', metaId: 'visa' }),
+    mov('gasto', 50000, '2026-11-04', { categoriaId: 'ocio' }),
+    mov('aportacion', 100000, '2026-11-05', { metaId: 'visa' }),
+    mov('aportacion', 200000, '2026-11-06', { metaId: 'viaje' }),
+  );
+  const r = estadoResultados(e, NOV, '2026-11-24');
+  assert.deepEqual(r.ingresos, [{ categoriaId: 'sueldo', total: 2000000, pct: 1 }]);
+  assert.deepEqual(r.gastos, [
+    { categoriaId: 'comida', total: 450000, pct: 0.225 },
+    { categoriaId: 'ocio', total: 50000, pct: 0.025 },
+  ]);
+  assert.equal(r.totalIngresos, 2000000);
+  assert.equal(r.totalGastos, 500000);
+  assert.equal(r.pctGastos, 0.25);
+  assert.equal(r.resultado, 1500000);
+  assert.equal(r.pctResultado, 0.75);
+  assert.equal(r.comprasTarjeta, 150000);
+  assert.equal(r.pagosDeuda, 100000);
+  assert.equal(r.ahorro, 200000);
+  assert.equal(r.queda, 1500000 + 150000 - 100000 - 200000);
+  assert.equal(r.queda, resumenPeriodo(e, NOV, '2026-11-24').queda);
+});
+
+test('estado de resultados sin ingresos: sin porcentajes', () => {
+  const e = estadoBase();
+  e.movimientos.push(mov('gasto', 1000, '2026-11-02', { categoriaId: 'comida' }));
+  const r = estadoResultados(e, NOV, '2026-11-24');
+  assert.equal(r.gastos[0].pct, null);
+  assert.equal(r.pctGastos, null);
+  assert.equal(r.pctResultado, null);
+  assert.equal(r.resultado, -1000);
+});
+
+test('estado de resultados con retiro de ahorro: ahorro neto negativo y cuadra', () => {
+  const e = estadoBase();
+  e.movimientos.push(
+    mov('ingreso', 10000, '2026-11-01', { categoriaId: 'sueldo' }),
+    mov('aportacion', -5000, '2026-11-10', { metaId: 'viaje' }),
+  );
+  const r = estadoResultados(e, NOV, '2026-11-24');
+  assert.equal(r.ahorro, -5000);
+  assert.equal(r.queda, 15000);
+  assert.equal(r.queda, resumenPeriodo(e, NOV, '2026-11-24').queda);
+});

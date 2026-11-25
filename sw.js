@@ -7,7 +7,7 @@ const ARCHIVOS = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
   'src/app.js', 'src/store.js', 'src/money.js', 'src/dates.js', 'src/summary.js', 'src/goals.js', 'src/backup.js', 'src/inicio.js',
-  'src/ui/dom.js', 'src/ui/formato.js', 'src/ui/periodo.js', 'src/ui/detalle.js', 'src/ui/nav.js', 'src/ui/mes.js', 'src/ui/registrar.js', 'src/ui/metas.js', 'src/ui/ajustes.js',
+  'src/ui/dom.js', 'src/ui/formato.js', 'src/ui/periodo.js', 'src/ui/detalle.js', 'src/ui/estado.js', 'src/ui/nav.js', 'src/ui/mes.js', 'src/ui/registrar.js', 'src/ui/metas.js', 'src/ui/ajustes.js',
 ];
 
 self.addEventListener('install', (ev) => {

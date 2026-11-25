@@ -68,3 +68,25 @@ export function detalleCategoria(estado, periodo, hoy, categoriaId) {
     movimientos,
   };
 }
+
+// Estado de resultados del periodo: ingresos y gastos por categoría, resultado
+// (ingresos − gastos, efectivo y tarjeta) y la conciliación hasta "Te queda".
+export function estadoResultados(estado, periodo, hoy) {
+  const r = resumenPeriodo(estado, periodo, hoy);
+  const pct = (monto) => (r.ingresos ? monto / r.ingresos : null);
+  const renglones = (lista) => lista.map(({ categoriaId, total }) => ({ categoriaId, total, pct: pct(total) }));
+  const resultado = r.ingresos - r.gastos;
+  return {
+    ingresos: renglones(r.porCategoriaIngreso),
+    totalIngresos: r.ingresos,
+    gastos: renglones(r.porCategoria),
+    totalGastos: r.gastos,
+    pctGastos: pct(r.gastos),
+    resultado,
+    pctResultado: pct(resultado),
+    comprasTarjeta: r.gastosTarjeta,
+    pagosDeuda: r.pagosDeuda,
+    ahorro: r.ahorro,
+    queda: r.queda,
+  };
+}
